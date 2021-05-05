@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.educenter.mapper.UcenterMemberMapper">
+
+    <!--查询某一天注册人数 resultType为返回类型 写int也可以-->
+    <select id="countRegisterDay" resultType="java.lang.Integer">
+        SELECT count(*) FROM ucenter_member uc
+        WHERE Date(uc.gmt_create)=#{day}
+    </select>
+    <!--多个参数Integer countRegisterDay(@Param("aa")String day,String name);
+       WHERE Date(uc.gmt_create)=#{aa}  WHERE Date(uc.gmt_create)=#{0}-->
+</mapper>
