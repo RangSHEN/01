@@ -6,6 +6,7 @@ import com.atguigu.serurity.entity.SecurityUser;
 import com.atguigu.serurity.entity.User;
 import com.atguigu.serurity.security.TokenManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,58 +32,52 @@ import java.util.ArrayList;
  */
 public class TokenLoginFilter extends UsernamePasswordAuthenticationFilter {
 
-    private AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager;//封装的权限管理
     private TokenManager tokenManager;
     private RedisTemplate redisTemplate;
+
+    //要使用对象，有参构造
 
     public TokenLoginFilter(AuthenticationManager authenticationManager, TokenManager tokenManager, RedisTemplate redisTemplate) {
         this.authenticationManager = authenticationManager;
         this.tokenManager = tokenManager;
         this.redisTemplate = redisTemplate;
         this.setPostOnly(false);
+        //设置登录路径和提交方式
         this.setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/admin/acl/login","POST"));
     }
 
+    //1 获取表单提交用户名和密码
     @Override
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res)
             throws AuthenticationException {
+        //获取表单提交过来数据
         try {
             User user = new ObjectMapper().readValue(req.getInputStream(), User.class);
-
-            return authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword(), new ArrayList<>()));
+            return authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(),user.getPassword(),
+                    new ArrayList<>()));//在认证过程中会调用userdetailservice去查数据库返回用户信息
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            throw new RuntimeException();
         }
 
     }
 
-    /**
-     * 登录成功
-     * @param req
-     * @param res
-     * @param chain
-     * @param auth
-     * @throws IOException
-     * @throws ServletException
-     */
+    //2 认证成功调用的方法
     @Override
     protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res, FilterChain chain,
-                                            Authentication auth) throws IOException, ServletException {
-        SecurityUser user = (SecurityUser) auth.getPrincipal();
+                                            Authentication authResult) throws IOException, ServletException {
+        //认证成功得到用户信息
+        SecurityUser user =(SecurityUser) authResult.getPrincipal();
+        //根据用户名生成token
         String token = tokenManager.createToken(user.getCurrentUserInfo().getUsername());
-        redisTemplate.opsForValue().set(user.getCurrentUserInfo().getUsername(), user.getPermissionValueList());
-
-        ResponseUtil.out(res, R.ok().data("token", token));
+        //把用户名称和用户权限列表信息放到redis
+        redisTemplate.opsForValue().set(user.getCurrentUserInfo().getUsername(),user.getPermissionValueList());
+        //返回token ResponseUtil.out 就像return 用在网络通信协议中
+        ResponseUtil.out(res,R.ok().data("token",token));
     }
 
-    /**
-     * 登录失败
-     * @param request
-     * @param response
-     * @param e
-     * @throws IOException
-     * @throws ServletException
-     */
+    //3 认证失败调用的方法
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
                                               AuthenticationException e) throws IOException, ServletException {

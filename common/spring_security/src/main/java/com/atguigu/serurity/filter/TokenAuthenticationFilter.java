@@ -3,6 +3,7 @@ package com.atguigu.serurity.filter;
 import com.atguigu.commonutils.R;
 import com.atguigu.commonutils.ResponseUtil;
 import com.atguigu.serurity.security.TokenManager;
+import org.apache.catalina.connector.Request;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,55 +34,42 @@ public class TokenAuthenticationFilter extends BasicAuthenticationFilter {
     private TokenManager tokenManager;
     private RedisTemplate redisTemplate;
 
-    public TokenAuthenticationFilter(AuthenticationManager authManager, TokenManager tokenManager,RedisTemplate redisTemplate) {
-        super(authManager);
+    public TokenAuthenticationFilter(AuthenticationManager authenticationManager,TokenManager tokenManager, RedisTemplate redisTemplate) {
+        super(authenticationManager);
         this.tokenManager = tokenManager;
         this.redisTemplate = redisTemplate;
     }
 
+
     @Override
-    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        logger.info("================="+req.getRequestURI());
-        if(req.getRequestURI().indexOf("admin") == -1) {
-            chain.doFilter(req, res);
-            return;
+        //获取当前认证成功用户权限信息 通过request得到头信息
+        UsernamePasswordAuthenticationToken authRequest = getAuthentication(request);
+        //判断如果有权限信息，放到权限上下文中
+        if(authRequest !=null){
+            SecurityContextHolder.getContext().setAuthentication(authRequest);
         }
-
-        UsernamePasswordAuthenticationToken authentication = null;
-        try {
-            authentication = getAuthentication(req);
-        } catch (Exception e) {
-            ResponseUtil.out(res, R.error());
-        }
-
-        if (authentication != null) {
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        } else {
-            ResponseUtil.out(res, R.error());
-        }
-        chain.doFilter(req, res);
+        chain.doFilter(request,response);
     }
 
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
-        // token置于header里
+        // 从header中获取token
         String token = request.getHeader("token");
-        if (token != null && !"".equals(token.trim())) {
-            String userName = tokenManager.getUserFromToken(token);
-
-            List<String> permissionValueList = (List<String>) redisTemplate.opsForValue().get(userName);
+        if( token !=null){
+            //从token获取用户名
+            String username = tokenManager.getUserInfoFromToken(token);
+            //从redis获取对应权限列表
+            List<String> permissionValueList = (List<String>)redisTemplate.opsForValue().get(username);
+            //Collection<? extends GrantedAuthority> authorities
             Collection<GrantedAuthority> authorities = new ArrayList<>();
-            for(String permissionValue : permissionValueList) {
-                if(StringUtils.isEmpty(permissionValue)) continue;
-                SimpleGrantedAuthority authority = new SimpleGrantedAuthority(permissionValue);
-                authorities.add(authority);
+            for (String permissionValue : permissionValueList) {
+                SimpleGrantedAuthority auth = new SimpleGrantedAuthority(permissionValue);
+                authorities.add(auth);
             }
-
-            if (!StringUtils.isEmpty(userName)) {
-                return new UsernamePasswordAuthenticationToken(userName, token, authorities);
-            }
-            return null;
+            return new UsernamePasswordAuthenticationToken(username,token,authorities);
         }
+
         return null;
     }
 }

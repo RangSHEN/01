@@ -42,7 +42,7 @@ public class StatisticsDailyServiceImpl extends ServiceImpl<StatisticsDailyMappe
         Integer countRegister = (Integer)registerR.getData().get("countRegister");
 
         //把获取数据添加数据库，统计分析表里
-        //第一种方式，加之前做判断看表里有没有相同日期数据，有做更新
+        //第一种方式，加之前做判断看表里有没有相同日期数   据，有做更新
         //第二种先删除，再添加
         StatisticsDaily sta = new StatisticsDaily();
         sta.setRegisterNum(countRegister);//注册人数

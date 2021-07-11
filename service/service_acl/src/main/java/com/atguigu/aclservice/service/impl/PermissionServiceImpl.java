@@ -249,7 +249,7 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
                 //把父菜单的level值+1
                 int level = permissionNode.getLevel()+1;
                 it.setLevel(level);
-                //如果children为空，进行初始化操作
+                /* 如果children为空，进行初始化操作 */
                 if(permissionNode.getChildren() == null) {
                     permissionNode.setChildren(new ArrayList<Permission>());
                 }
@@ -295,7 +295,7 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
             //封装idList里面
             idList.add(item.getId());
             //递归查询
-            this.selectPermissionChildById(item.getId(),idList);
+            this.selectPermissionChildById(item.getId(),idList);//this 相当于是permissionService
         });
 
     }
@@ -317,7 +317,7 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
             rolePermissionList.add(rolePermission);
         }
         //添加到角色菜单关系表
-        rolePermissionService.saveBatch(rolePermissionList);       //this 相当于是permissionService
+        rolePermissionService.saveBatch(rolePermissionList);
 
     }
 }

@@ -32,10 +32,10 @@ public class TokenWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private UserDetailsService userDetailsService;
     private TokenManager tokenManager;
-    private DefaultPasswordEncoder defaultPasswordEncoder;
+    private DefaultPasswordEncoder defaultPasswordEncoder;//密码工具类
     private RedisTemplate redisTemplate;
 
-    @Autowired
+    @Autowired //交给spring容器管理的加@Autowired
     public TokenWebSecurityConfig(UserDetailsService userDetailsService, DefaultPasswordEncoder defaultPasswordEncoder,
                                   TokenManager tokenManager, RedisTemplate redisTemplate) {
         this.userDetailsService = userDetailsService;
@@ -52,11 +52,11 @@ public class TokenWebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.exceptionHandling()
-                .authenticationEntryPoint(new UnauthorizedEntryPoint())
+                .authenticationEntryPoint(new UnauthorizedEntryPoint()) //没有权限访问
                 .and().csrf().disable()
                 .authorizeRequests()
                 .anyRequest().authenticated()
-                .and().logout().logoutUrl("/admin/acl/index/logout")
+                .and().logout().logoutUrl("/admin/acl/index/logout")//退出的路径
                 .addLogoutHandler(new TokenLogoutHandler(tokenManager,redisTemplate)).and()
                 .addFilter(new TokenLoginFilter(authenticationManager(), tokenManager, redisTemplate))
                 .addFilter(new TokenAuthenticationFilter(authenticationManager(), tokenManager, redisTemplate)).httpBasic();

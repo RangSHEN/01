@@ -47,7 +47,7 @@ public class WxApiController {
             );
             //请求这个拼接好的地址，得到返回两个值 access_token 和openid
             //使用httpclient发送请求，得到返回结果 优点 不用浏览器也能模拟浏览器请求和响应过程
-            String accessTokenInfo = HttpClientUtils.get(accessTokenUrl);
+            String accessTokenInfo = HttpClientUtils.get(accessTokenUrl);//返回JSON字符串
 
             //从accessTokenInfo字符串获取出来两个值 access_token 和openid
             //System.out.println("accessTokenInfo:"+accessTokenInfo);

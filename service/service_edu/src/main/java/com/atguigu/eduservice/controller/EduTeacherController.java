@@ -98,7 +98,7 @@ public class EduTeacherController {
     public R pageTeacherCondition(@PathVariable long current, @PathVariable long limit,
                                   @RequestBody(required = false) TeacherQuery teacherQuery){
         //@RequestBody 使用json传递数据，把json数据封装到对应对象里面 需要用post提交
-        //@ResponseBody 返回数据，返回json数据
+        //@ResponseBody 返回数据，返回json数据到前端
         //创建page对象
         Page<EduTeacher> pageTeacher = new Page<>(current,limit);
         //构建条件

@@ -27,10 +27,14 @@ public class DefaultPasswordEncoder implements PasswordEncoder {
 
     }
 
+    //进行MD5加密
+    @Override
     public String encode(CharSequence rawPassword) {
         return MD5.encrypt(rawPassword.toString());
     }
 
+    //进行密码比对 rawPassword 加密之后密码，encodedPassword传入密码
+    @Override
     public boolean matches(CharSequence rawPassword, String encodedPassword) {
         return encodedPassword.equals(MD5.encrypt(rawPassword.toString()));
     }

@@ -42,7 +42,7 @@ public class UcenterMemberController {
     }
 
     //注册
-    @PostMapping("registry")
+    @PostMapping("register")
     public R registerUser(@RequestBody RegisterVo registerVo){
         memberService.register(registerVo);
         return R.ok();

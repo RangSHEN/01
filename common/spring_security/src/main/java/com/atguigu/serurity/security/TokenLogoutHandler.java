@@ -14,30 +14,31 @@ import javax.servlet.http.HttpServletResponse;
  * 登出业务逻辑类
  * </p>
  *
- * @author qy
- * @since 2019-11-08
  */
 public class TokenLogoutHandler implements LogoutHandler {
 
-    private TokenManager tokenManager;
+    private TokenManager tokenManager;//要移除token，需要这个工具类
     private RedisTemplate redisTemplate;
 
+    //最简单的传入，通过有参构造 没有交给容器管理
     public TokenLogoutHandler(TokenManager tokenManager, RedisTemplate redisTemplate) {
         this.tokenManager = tokenManager;
         this.redisTemplate = redisTemplate;
     }
-
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+        //1 从header里面获取token
         String token = request.getHeader("token");
-        if (token != null) {
+        if(token != null){
+            //移除 ,客户端不传token就可以
             tokenManager.removeToken(token);
 
-            //清空当前用户缓存中的权限数据
-            String userName = tokenManager.getUserFromToken(token);
-            redisTemplate.delete(userName);
+            //2 token不为空，移除token，从redis删除token
+            String username = tokenManager.getUserInfoFromToken(token);
+            redisTemplate.delete(username);
         }
-        ResponseUtil.out(response, R.ok());
+        ResponseUtil.out(response,R.ok());
     }
+
 
 }

@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+//返回内容
 public class ResponseUtil {
 
     public static void out(HttpServletResponse response, R r) {
